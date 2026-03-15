@@ -1,5 +1,3 @@
-import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BookCard } from "./book-card";
 import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
 import { Link } from "wouter";
@@ -11,22 +9,8 @@ interface SeriesRowProps {
 }
 
 export function SeriesRow({ title, books, seriesId }: SeriesRowProps) {
-  const rowRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (direction: "left" | "right") => {
-    if (rowRef.current) {
-      const { scrollLeft, clientWidth } = rowRef.current;
-      const scrollTo = direction === "left" 
-        ? scrollLeft - clientWidth * 0.75 
-        : scrollLeft + clientWidth * 0.75;
-      
-      rowRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
-    }
-  };
-
   if (books.length === 0) return null;
 
-  // Sort books by seriesOrder if available
   const sortedBooks = [...books].sort((a, b) => {
     if (a.seriesOrder !== null && b.seriesOrder !== null) {
       return (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0);
@@ -41,7 +25,7 @@ export function SeriesRow({ title, books, seriesId }: SeriesRowProps) {
           {title}
         </h2>
         {seriesId && (
-          <Link 
+          <Link
             href={`/series/${seriesId}/edit`}
             className="text-sm text-zinc-400 hover:text-white transition-colors opacity-0 group-hover/row:opacity-100"
           >
@@ -50,31 +34,12 @@ export function SeriesRow({ title, books, seriesId }: SeriesRowProps) {
         )}
       </div>
 
-      <div className="relative px-4 sm:px-6 lg:px-8">
-        <button 
-          onClick={() => scroll("left")}
-          className="absolute left-0 top-0 bottom-0 z-30 w-12 bg-black/50 hover:bg-black/80 backdrop-blur-sm opacity-0 group-hover/row:opacity-100 transition-all flex items-center justify-center disabled:opacity-0"
-        >
-          <ChevronLeft className="w-8 h-8 text-white" />
-        </button>
-
-        <div 
-          ref={rowRef}
-          className="flex gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory py-4 px-1"
-        >
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3">
           {sortedBooks.map((book, i) => (
-            <div key={book.id} className="w-[140px] sm:w-[160px] md:w-[200px] lg:w-[240px] flex-none snap-start">
-              <BookCard book={book} delay={i} />
-            </div>
+            <BookCard key={book.id} book={book} delay={i} />
           ))}
         </div>
-
-        <button 
-          onClick={() => scroll("right")}
-          className="absolute right-0 top-0 bottom-0 z-30 w-12 bg-black/50 hover:bg-black/80 backdrop-blur-sm opacity-0 group-hover/row:opacity-100 transition-all flex items-center justify-center"
-        >
-          <ChevronRight className="w-8 h-8 text-white" />
-        </button>
       </div>
     </div>
   );

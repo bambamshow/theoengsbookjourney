@@ -5,7 +5,7 @@ import { Layout } from "@/components/layout";
 import { SeriesRow } from "@/components/series-row";
 import { BookCard } from "@/components/book-card";
 import { Loader } from "@/components/ui/loader";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, LayoutGrid, Layers } from "lucide-react";
 import { Link } from "wouter";
 import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
 import {
@@ -24,7 +24,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+type ViewMode = "series" | "all";
+type SortBy = "custom" | "title" | "author" | "rating" | "series";
+
 const ORDER_KEY = "bookshelf-order";
+const VIEW_KEY = "bookshelf-view";
+const SORT_KEY = "bookshelf-sort";
 
 function loadOrder(): number[] | null {
   try {
@@ -52,10 +57,38 @@ function applyOrder(books: Book[], order: number[] | null): Book[] {
   return ordered;
 }
 
+function sortBooks(
+  books: Book[],
+  sort: SortBy,
+  order: number[] | null,
+  seriesNameMap: Map<number, string>
+): Book[] {
+  if (sort === "custom") return applyOrder(books, order);
+  const sorted = [...books];
+  switch (sort) {
+    case "title":
+      return sorted.sort((a, b) => a.title.localeCompare(b.title));
+    case "author":
+      return sorted.sort((a, b) => a.author.localeCompare(b.author));
+    case "rating":
+      return sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    case "series":
+      return sorted.sort((a, b) => {
+        const sa = seriesNameMap.get(a.seriesId ?? -1) ?? "zzz";
+        const sb = seriesNameMap.get(b.seriesId ?? -1) ?? "zzz";
+        if (sa !== sb) return sa.localeCompare(sb);
+        if ((a.seriesOrder ?? 999) !== (b.seriesOrder ?? 999))
+          return (a.seriesOrder ?? 999) - (b.seriesOrder ?? 999);
+        return a.title.localeCompare(b.title);
+      });
+    default:
+      return sorted;
+  }
+}
+
 function SortableBookCard({ book, index }: { book: Book; index: number }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: book.id,
-  });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: book.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -69,13 +102,20 @@ function SortableBookCard({ book, index }: { book: Book; index: number }) {
   );
 }
 
+const GRID = "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3 gap-y-6";
+
 export default function Home() {
   const { data: books, isLoading: booksLoading } = useBooks();
   const { data: seriesList, isLoading: seriesLoading } = useSeries();
+
+  const [viewMode, setViewMode] = useState<ViewMode>("series");
+  const [sortBy, setSortBy] = useState<SortBy>("custom");
   const [displayOrder, setDisplayOrder] = useState<number[] | null>(null);
 
   useEffect(() => {
     setDisplayOrder(loadOrder());
+    setViewMode((localStorage.getItem(VIEW_KEY) as ViewMode) || "series");
+    setSortBy((localStorage.getItem(SORT_KEY) as SortBy) || "custom");
   }, []);
 
   const sensors = useSensors(
@@ -86,29 +126,49 @@ export default function Home() {
     return <Layout><Loader /></Layout>;
   }
 
+  const seriesNameMap = new Map<number, string>(
+    seriesList?.map((s) => [s.id, s.name]) ?? []
+  );
+
   const booksBySeries = new Map<number, Book[]>();
   const standaloneBooks = books?.filter((b) => !b.seriesId) || [];
 
-  if (books && seriesList) {
-    seriesList.forEach((series) => {
-      const seriesBooks = books.filter((b) => b.seriesId === series.id);
-      if (seriesBooks.length > 0) booksBySeries.set(series.id, seriesBooks);
-    });
+  seriesList?.forEach((series) => {
+    const seriesBooks = books?.filter((b) => b.seriesId === series.id) ?? [];
+    if (seriesBooks.length > 0) booksBySeries.set(series.id, seriesBooks);
+  });
+
+  const hasContent = books && books.length > 0;
+  const allBooks = books ?? [];
+
+  const isDnDActive = viewMode === "all" && sortBy === "custom";
+  const sortedAllBooks = sortBooks(allBooks, sortBy, displayOrder, seriesNameMap);
+  const sortedStandalone = sortBooks(standaloneBooks, sortBy, displayOrder, seriesNameMap);
+
+  function handleViewMode(mode: ViewMode) {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_KEY, mode);
   }
 
-  const orderedStandalone = applyOrder(standaloneBooks, displayOrder);
-  const hasContent = books && books.length > 0;
+  function handleSort(sort: SortBy) {
+    setSortBy(sort);
+    localStorage.setItem(SORT_KEY, sort);
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = orderedStandalone.findIndex((b) => b.id === active.id);
-    const newIndex = orderedStandalone.findIndex((b) => b.id === over.id);
-    const newOrder = arrayMove(orderedStandalone, oldIndex, newIndex);
+    const source = viewMode === "all" ? sortedAllBooks : sortedStandalone;
+    const oldIndex = source.findIndex((b) => b.id === active.id);
+    const newIndex = source.findIndex((b) => b.id === over.id);
+    const newOrder = arrayMove(source, oldIndex, newIndex);
     const ids = newOrder.map((b) => b.id);
     setDisplayOrder(ids);
     saveOrder(ids);
   }
+
+  const displayBooks = viewMode === "all" ? sortedAllBooks : sortedStandalone;
+  const displayIds = displayBooks.map((b) => b.id);
 
   return (
     <Layout>
@@ -118,7 +178,6 @@ export default function Home() {
           style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/cinematic-bg.png)` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
-
         <div className="relative z-20 max-w-[1600px] mx-auto">
           <h1 className="text-4xl md:text-6xl font-display font-extrabold text-white mb-4">
             Your Digital <span className="text-primary">Library</span>
@@ -126,7 +185,6 @@ export default function Home() {
           <p className="text-lg md:text-xl text-zinc-400 max-w-2xl">
             Keep track of your reading journey. Rate, review, and organize your favorite books and series in one cinematic place.
           </p>
-
           <div className="mt-8">
             <Link
               href="/book/new"
@@ -146,51 +204,123 @@ export default function Home() {
               <BookOpen className="w-12 h-12 text-zinc-600" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">Your shelf is empty</h2>
-            <p className="text-zinc-400 max-w-md mx-auto mb-8">
+            <p className="text-zinc-400 max-w-md mx-auto">
               Start building your collection by adding your first book. You can group them into series later.
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-8 -mt-8">
-            {seriesList?.map((series) => {
-              const seriesBooks = booksBySeries.get(series.id);
-              if (!seriesBooks) return null;
-              return (
-                <SeriesRow
-                  key={series.id}
-                  title={series.name}
-                  books={seriesBooks}
-                  seriesId={series.id}
-                />
-              );
-            })}
+          <>
+            {/* Controls bar */}
+            <div className="sticky top-14 z-30 bg-background/80 backdrop-blur-md border-b border-white/5 px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+              {/* View mode toggle */}
+              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+                <button
+                  onClick={() => handleViewMode("series")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === "series"
+                      ? "bg-white/15 text-white"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  By Series
+                </button>
+                <button
+                  onClick={() => handleViewMode("all")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === "all"
+                      ? "bg-white/15 text-white"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  All Books
+                </button>
+              </div>
 
-            {(orderedStandalone.length > 0 || seriesList?.length === 0) && (
-              <div className="px-4 sm:px-6 lg:px-8 mt-12">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl md:text-2xl font-display font-bold text-white tracking-tight">
-                    {seriesList && seriesList.length > 0 ? "Standalone Books" : "All Books"}
-                  </h2>
-                  {orderedStandalone.length > 1 && (
-                    <span className="text-xs text-zinc-500 select-none">Drag to reorder</span>
-                  )}
+              {/* Sort controls */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-500">Sort:</span>
+                <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+                  {(
+                    [
+                      { value: "custom", label: "Custom" },
+                      { value: "title", label: "Title" },
+                      { value: "author", label: "Author" },
+                      { value: "rating", label: "Stars" },
+                      { value: "series", label: "Series" },
+                    ] as { value: SortBy; label: string }[]
+                  ).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => handleSort(value)}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                        sortBy === value
+                          ? "bg-white/15 text-white"
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
+                {isDnDActive && (
+                  <span className="text-xs text-zinc-600 hidden sm:inline">Drag to reorder</span>
+                )}
+              </div>
+            </div>
 
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext
-                    items={orderedStandalone.map((b) => b.id)}
-                    strategy={rectSortingStrategy}
-                  >
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 gap-y-8">
-                      {orderedStandalone.map((book, i) => (
-                        <SortableBookCard key={book.id} book={book} index={i} />
+            {/* Content */}
+            {viewMode === "series" ? (
+              <div className="flex flex-col gap-8 mt-6">
+                {seriesList?.map((series) => {
+                  const seriesBooks = booksBySeries.get(series.id);
+                  if (!seriesBooks) return null;
+                  return (
+                    <SeriesRow
+                      key={series.id}
+                      title={series.name}
+                      books={seriesBooks}
+                      seriesId={series.id}
+                    />
+                  );
+                })}
+
+                {standaloneBooks.length > 0 && (
+                  <div className="px-4 sm:px-6 lg:px-8 mt-4">
+                    <h2 className="text-xl font-display font-bold text-white tracking-tight mb-4">
+                      {seriesList && seriesList.length > 0 ? "Standalone Books" : "All Books"}
+                    </h2>
+                    <div className={GRID}>
+                      {sortedStandalone.map((book, i) => (
+                        <BookCard key={book.id} book={book} delay={i} />
                       ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="px-4 sm:px-6 lg:px-8 mt-6">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext items={displayIds} strategy={rectSortingStrategy}>
+                    <div className={GRID}>
+                      {displayBooks.map((book, i) =>
+                        isDnDActive ? (
+                          <SortableBookCard key={book.id} book={book} index={i} />
+                        ) : (
+                          <BookCard key={book.id} book={book} delay={i} />
+                        )
+                      )}
                     </div>
                   </SortableContext>
                 </DndContext>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </Layout>
