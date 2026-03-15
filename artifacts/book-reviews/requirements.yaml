@@ -1,0 +1,14 @@
+packages:
+  "framer-motion": "For premium cinematic page transitions and micro-interactions"
+  "react-hook-form": "For robust and performant form state management"
+  "@hookform/resolvers": "For Zod validation integration in forms"
+  "lucide-react": "For beautiful consistent icons"
+
+images:
+  - path: "artifacts/book-reviews/public/images/cinematic-bg.png"
+    description: "Dark, moody cinematic texture with subtle deep red light leaks, almost black, suitable for a streaming service style dark mode website background"
+    aspect_ratio: "16:9"
+
+notes:
+  - Using generated API hooks from @workspace/api-client-react
+  - Inferring Zod schemas for forms based on api.schemas.ts types

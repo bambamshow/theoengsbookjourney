@@ -1,0 +1,240 @@
+import { useRoute, useLocation, Link } from "wouter";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useBook, useCreateBookMutation, useUpdateBookMutation } from "@/hooks/use-books";
+import { useSeries } from "@/hooks/use-series";
+import { Layout } from "@/components/layout";
+import { StarRating } from "@/components/star-rating";
+import { Loader } from "@/components/ui/loader";
+import { ArrowLeft, Save, Image as ImageIcon } from "lucide-react";
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+
+// Validating data specifically for our inputs
+const bookSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  author: z.string().min(1, "Author is required"),
+  coverUrl: z.string().url("Must be a valid URL"),
+  review: z.string().optional().nullable(),
+  rating: z.coerce.number().min(1).max(5).optional().nullable(),
+  seriesId: z.coerce.number().optional().nullable(),
+  seriesOrder: z.coerce.number().optional().nullable(),
+});
+
+type BookFormData = z.infer<typeof bookSchema>;
+
+export default function BookForm() {
+  const [, params] = useRoute("/book/:id/edit");
+  const [, setLocation] = useLocation();
+  const isEditing = !!params?.id;
+  const id = isEditing ? parseInt(params.id!, 10) : 0;
+
+  const { data: book, isLoading: bookLoading } = useBook(id);
+  const { data: seriesList } = useSeries();
+  
+  const { mutate: createBook, isPending: isCreating } = useCreateBookMutation();
+  const { mutate: updateBook, isPending: isUpdating } = useUpdateBookMutation(id);
+
+  const isPending = isCreating || isUpdating;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm<BookFormData>({
+    resolver: zodResolver(bookSchema),
+    defaultValues: {
+      title: "",
+      author: "",
+      coverUrl: "",
+      review: "",
+      rating: null,
+      seriesId: null,
+      seriesOrder: null,
+    }
+  });
+
+  // Watch cover URL for live preview
+  const coverUrlPreview = watch("coverUrl");
+
+  useEffect(() => {
+    if (isEditing && book) {
+      reset({
+        title: book.title,
+        author: book.author,
+        coverUrl: book.coverUrl,
+        review: book.review,
+        rating: book.rating,
+        seriesId: book.seriesId,
+        seriesOrder: book.seriesOrder,
+      });
+    }
+  }, [isEditing, book, reset]);
+
+  const onSubmit = (data: BookFormData) => {
+    // Clean up nulls
+    const payload = {
+      ...data,
+      seriesId: data.seriesId || null,
+      seriesOrder: data.seriesOrder || null,
+      rating: data.rating || null,
+    };
+
+    if (isEditing) {
+      updateBook(payload);
+    } else {
+      createBook(payload);
+    }
+  };
+
+  if (isEditing && bookLoading) return <Layout><Loader /></Layout>;
+
+  return (
+    <Layout>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24">
+        <Link 
+          href={isEditing ? `/book/${id}` : "/"} 
+          className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8 text-sm font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" /> Cancel
+        </Link>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl"
+        >
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-8">
+            {isEditing ? "Edit Book Details" : "Add a New Book"}
+          </h1>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col md:flex-row gap-12">
+            
+            {/* Left: Preview */}
+            <div className="w-full md:w-1/3 shrink-0 flex flex-col gap-4">
+              <div className="aspect-[2/3] rounded-lg overflow-hidden bg-zinc-800 border border-white/5 shadow-xl flex flex-col items-center justify-center relative">
+                {coverUrlPreview && !errors.coverUrl ? (
+                  <img 
+                    src={coverUrlPreview} 
+                    alt="Cover preview" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&q=80";
+                    }}
+                  />
+                ) : (
+                  <div className="text-zinc-500 flex flex-col items-center p-6 text-center">
+                    <ImageIcon className="w-12 h-12 mb-4 opacity-50" />
+                    <p className="text-sm">Enter a valid image URL to see cover preview</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Fields */}
+            <div className="flex-1 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">Title <span className="text-primary">*</span></label>
+                  <input 
+                    {...register("title")}
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    placeholder="e.g. Dune"
+                  />
+                  {errors.title && <p className="text-primary text-xs mt-1">{errors.title.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">Author <span className="text-primary">*</span></label>
+                  <input 
+                    {...register("author")}
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    placeholder="e.g. Frank Herbert"
+                  />
+                  {errors.author && <p className="text-primary text-xs mt-1">{errors.author.message}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300">Cover Image URL <span className="text-primary">*</span></label>
+                <input 
+                  {...register("coverUrl")}
+                  className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono text-sm"
+                  placeholder="https://example.com/cover.jpg"
+                />
+                {errors.coverUrl && <p className="text-primary text-xs mt-1">{errors.coverUrl.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-xl bg-black/30 border border-white/5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">Series (Optional)</label>
+                  <select 
+                    {...register("seriesId", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
+                  >
+                    <option value="">No Series</option>
+                    {seriesList?.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">Order in Series</label>
+                  <input 
+                    type="number"
+                    {...register("seriesOrder", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    placeholder="e.g. 1"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-sm font-medium text-zinc-300">Your Rating</label>
+                <Controller
+                  name="rating"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="bg-black/30 inline-block p-3 rounded-lg border border-white/5">
+                      <StarRating 
+                        value={field.value || 0} 
+                        onChange={field.onChange} 
+                        size="lg"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300">Review</label>
+                <textarea 
+                  {...register("review")}
+                  rows={8}
+                  className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-serif text-lg leading-relaxed"
+                  placeholder="Write your thoughts about the book here..."
+                />
+              </div>
+
+              <div className="pt-6 border-t border-white/10 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-md font-semibold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:transform-none shadow-lg shadow-primary/25"
+                >
+                  <Save className="w-5 h-5" />
+                  {isPending ? "Saving..." : "Save Book"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </Layout>
+  );
+}
