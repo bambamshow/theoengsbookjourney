@@ -18,6 +18,7 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List all books
  */
+export const listBooksResponseRatingMin = 0.5;
 export const listBooksResponseRatingMax = 5;
 
 export const ListBooksResponseItem = zod.object({
@@ -26,7 +27,11 @@ export const ListBooksResponseItem = zod.object({
   author: zod.string(),
   coverUrl: zod.string(),
   review: zod.string().nullish(),
-  rating: zod.number().min(1).max(listBooksResponseRatingMax).nullish(),
+  rating: zod
+    .number()
+    .min(listBooksResponseRatingMin)
+    .max(listBooksResponseRatingMax)
+    .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
   createdAt: zod.date(),
@@ -36,6 +41,7 @@ export const ListBooksResponse = zod.array(ListBooksResponseItem);
 /**
  * @summary Create a book
  */
+export const createBookBodyRatingMin = 0.5;
 export const createBookBodyRatingMax = 5;
 
 export const CreateBookBody = zod.object({
@@ -43,7 +49,11 @@ export const CreateBookBody = zod.object({
   author: zod.string(),
   coverUrl: zod.string(),
   review: zod.string().nullish(),
-  rating: zod.number().min(1).max(createBookBodyRatingMax).nullish(),
+  rating: zod
+    .number()
+    .min(createBookBodyRatingMin)
+    .max(createBookBodyRatingMax)
+    .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
 });
@@ -55,6 +65,7 @@ export const GetBookParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const getBookResponseRatingMin = 0.5;
 export const getBookResponseRatingMax = 5;
 
 export const GetBookResponse = zod.object({
@@ -63,7 +74,11 @@ export const GetBookResponse = zod.object({
   author: zod.string(),
   coverUrl: zod.string(),
   review: zod.string().nullish(),
-  rating: zod.number().min(1).max(getBookResponseRatingMax).nullish(),
+  rating: zod
+    .number()
+    .min(getBookResponseRatingMin)
+    .max(getBookResponseRatingMax)
+    .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
   createdAt: zod.date(),
@@ -76,6 +91,7 @@ export const UpdateBookParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const updateBookBodyRatingMin = 0.5;
 export const updateBookBodyRatingMax = 5;
 
 export const UpdateBookBody = zod.object({
@@ -83,11 +99,16 @@ export const UpdateBookBody = zod.object({
   author: zod.string(),
   coverUrl: zod.string(),
   review: zod.string().nullish(),
-  rating: zod.number().min(1).max(updateBookBodyRatingMax).nullish(),
+  rating: zod
+    .number()
+    .min(updateBookBodyRatingMin)
+    .max(updateBookBodyRatingMax)
+    .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
 });
 
+export const updateBookResponseRatingMin = 0.5;
 export const updateBookResponseRatingMax = 5;
 
 export const UpdateBookResponse = zod.object({
@@ -96,7 +117,11 @@ export const UpdateBookResponse = zod.object({
   author: zod.string(),
   coverUrl: zod.string(),
   review: zod.string().nullish(),
-  rating: zod.number().min(1).max(updateBookResponseRatingMax).nullish(),
+  rating: zod
+    .number()
+    .min(updateBookResponseRatingMin)
+    .max(updateBookResponseRatingMax)
+    .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
   createdAt: zod.date(),
@@ -135,6 +160,7 @@ export const GetSeriesParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const getSeriesResponseBooksItemRatingMin = 0.5;
 export const getSeriesResponseBooksItemRatingMax = 5;
 
 export const GetSeriesResponse = zod.object({
@@ -151,7 +177,7 @@ export const GetSeriesResponse = zod.object({
       review: zod.string().nullish(),
       rating: zod
         .number()
-        .min(1)
+        .min(getSeriesResponseBooksItemRatingMin)
         .max(getSeriesResponseBooksItemRatingMax)
         .nullish(),
       seriesId: zod.number().nullish(),

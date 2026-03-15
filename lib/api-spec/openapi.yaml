@@ -251,8 +251,8 @@ components:
           type: string
           nullable: true
         rating:
-          type: integer
-          minimum: 1
+          type: number
+          minimum: 0.5
           maximum: 5
           nullable: true
         seriesId:
@@ -284,8 +284,8 @@ components:
           type: string
           nullable: true
         rating:
-          type: integer
-          minimum: 1
+          type: number
+          minimum: 0.5
           maximum: 5
           nullable: true
         seriesId:

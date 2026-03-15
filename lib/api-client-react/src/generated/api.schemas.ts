@@ -16,7 +16,7 @@ export interface Book {
   coverUrl: string;
   review?: string | null;
   /**
-   * @minimum 1
+   * @minimum 0.5
    * @maximum 5
    */
   rating?: number | null;
@@ -31,7 +31,7 @@ export interface CreateBookInput {
   coverUrl: string;
   review?: string | null;
   /**
-   * @minimum 1
+   * @minimum 0.5
    * @maximum 5
    */
   rating?: number | null;

@@ -103,7 +103,7 @@ export default function BookDetail() {
               {book.rating ? (
                 <div className="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/5">
                   <StarRating value={book.rating} readOnly size="lg" />
-                  <span className="text-xl font-bold text-white">{book.rating}.0</span>
+                  <span className="text-xl font-bold text-white">{book.rating}</span>
                 </div>
               ) : (
                 <span className="text-zinc-500 italic">No rating yet</span>

@@ -17,7 +17,7 @@ const bookSchema = z.object({
   author: z.string().min(1, "Author is required"),
   coverUrl: z.string().url("Must be a valid URL"),
   review: z.string().optional().nullable(),
-  rating: z.coerce.number().min(1).max(5).optional().nullable(),
+  rating: z.coerce.number().min(0.5).max(5).optional().nullable(),
   seriesId: z.coerce.number().optional().nullable(),
   seriesOrder: z.coerce.number().optional().nullable(),
 });
