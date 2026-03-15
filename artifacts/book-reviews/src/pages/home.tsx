@@ -172,25 +172,25 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8 border-b border-white/5">
+      <div className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8 border-b border-white/5">
         <div
           className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
           style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/cinematic-bg.png)` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
         <div className="relative z-20 max-w-[1600px] mx-auto">
-          <h1 className="text-4xl md:text-6xl font-display font-extrabold text-white mb-4">
-            Your Digital <span className="text-primary">Library</span>
+          <h1 className="text-3xl md:text-5xl font-display font-extrabold text-white mb-3">
+            Keep <span className="text-primary">Reading!</span>
           </h1>
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl">
+          <p className="text-base md:text-lg text-zinc-400 max-w-2xl">
             Keep track of your reading journey. Rate, review, and organize your favorite books and series in one cinematic place.
           </p>
-          <div className="mt-8">
+          <div className="mt-6">
             <Link
               href="/book/new"
-              className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-md font-semibold inline-flex items-center gap-2 transition-all hover:scale-105"
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-md font-semibold inline-flex items-center gap-2 transition-all hover:scale-105 text-sm"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               Add a Book
             </Link>
           </div>

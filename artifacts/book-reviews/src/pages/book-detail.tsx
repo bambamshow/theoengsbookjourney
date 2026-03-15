@@ -14,17 +14,14 @@ export default function BookDetail() {
   const { data: book, isLoading } = useBook(id);
   const { mutate: deleteBook, isPending: isDeleting } = useDeleteBookMutation();
   
-  // Fetch series info if book belongs to one
   const { data: series } = useSingleSeries(book?.seriesId || 0);
 
   if (isLoading) return <Layout><Loader /></Layout>;
-  if (!book) return <Layout><div className="pt-32 text-center text-white">Book not found</div></Layout>;
+  if (!book) return <Layout><div className="pt-24 text-center text-white">Book not found</div></Layout>;
 
   return (
     <Layout>
-      {/* Cinematic Hero/Backdrop */}
-      <div className="relative min-h-[70vh] flex items-center justify-center pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-        {/* Blurred Background Image */}
+      <div className="relative min-h-[52vh] flex items-center justify-center pt-18 pb-9 px-4 sm:px-6 lg:px-8">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat blur-2xl opacity-30 scale-110"
           style={{ backgroundImage: `url(${book.coverUrl})` }}
@@ -33,16 +30,16 @@ export default function BookDetail() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent z-10" />
 
-        <div className="relative z-20 max-w-6xl mx-auto w-full flex flex-col md:flex-row gap-12 items-center md:items-start">
+        <div className="relative z-20 max-w-5xl mx-auto w-full flex flex-col md:flex-row gap-9 items-center md:items-start pt-16">
           
           {/* Left Column: Cover */}
           <motion.div 
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-full max-w-sm shrink-0"
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="w-full max-w-[220px] shrink-0"
           >
-            <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 ring-1 ring-white/5 relative group">
+            <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.8)] border border-white/10 ring-1 ring-white/5">
               <img 
                 src={book.coverUrl} 
                 alt={book.title} 
@@ -53,13 +50,12 @@ export default function BookDetail() {
               />
             </div>
             
-            {/* Actions under cover */}
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2 mt-4">
               <Link 
                 href={`/book/${book.id}/edit`}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-md font-medium flex items-center justify-center gap-2 transition-colors border border-white/5"
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-white/5"
               >
-                <Edit3 className="w-4 h-4" /> Edit
+                <Edit3 className="w-3.5 h-3.5" /> Edit
               </Link>
               <button 
                 onClick={() => {
@@ -68,61 +64,61 @@ export default function BookDetail() {
                   }
                 }}
                 disabled={isDeleting}
-                className="flex-1 bg-destructive/20 hover:bg-destructive/80 text-destructive-foreground py-3 rounded-md font-medium flex items-center justify-center gap-2 transition-colors border border-destructive/30"
+                className="flex-1 bg-destructive/20 hover:bg-destructive/80 text-destructive-foreground py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-destructive/30"
               >
-                <Trash2 className="w-4 h-4" /> {isDeleting ? "Deleting..." : "Delete"}
+                <Trash2 className="w-3.5 h-3.5" /> {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </motion.div>
 
           {/* Right Column: Details */}
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            className="flex-1 text-left pt-4"
+            transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+            className="flex-1 text-left pt-3"
           >
-            <Link href="/" className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-6 text-sm font-medium">
-              <ArrowLeft className="w-4 h-4" /> Back to Library
+            <Link href="/" className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors mb-4 text-sm font-medium">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Library
             </Link>
 
             {book.seriesId && series && (
-              <Link href={`/series`} className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 text-xs font-bold uppercase tracking-wider mb-4 hover:bg-primary/30 transition-colors">
+              <Link href={`/series`} className="inline-block px-2.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 text-xs font-bold uppercase tracking-wider mb-3 hover:bg-primary/30 transition-colors">
                 {series.name} {book.seriesOrder ? `#${book.seriesOrder}` : ''}
               </Link>
             )}
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-extrabold text-white mb-2 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-white mb-1.5 leading-tight">
               {book.title}
             </h1>
-            <p className="text-xl md:text-2xl text-zinc-300 font-light mb-6">
+            <p className="text-lg md:text-xl text-zinc-300 font-light mb-5">
               by <span className="text-white font-medium">{book.author}</span>
             </p>
 
-            <div className="flex items-center gap-6 mb-10 pb-8 border-b border-white/10">
+            <div className="flex items-center gap-5 mb-7 pb-6 border-b border-white/10">
               {book.rating ? (
-                <div className="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/5">
-                  <StarRating value={book.rating} readOnly size="lg" />
-                  <span className="text-xl font-bold text-white">{book.rating}</span>
+                <div className="flex items-center gap-2.5 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/5">
+                  <StarRating value={book.rating} readOnly size="md" />
+                  <span className="text-lg font-bold text-white">{book.rating}</span>
                 </div>
               ) : (
-                <span className="text-zinc-500 italic">No rating yet</span>
+                <span className="text-zinc-500 italic text-sm">No rating yet</span>
               )}
               
-              <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                <Calendar className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
+                <Calendar className="w-3.5 h-3.5" />
                 <span>Added {new Date(book.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
 
             <div className="prose prose-invert max-w-none">
-              <h3 className="text-2xl font-display font-bold text-white mb-4">Review</h3>
+              <h3 className="text-xl font-display font-bold text-white mb-3">Review</h3>
               {book.review ? (
-                <div className="text-zinc-300 leading-relaxed text-lg whitespace-pre-wrap font-serif">
+                <div className="text-zinc-300 leading-relaxed text-base whitespace-pre-wrap font-serif">
                   {book.review}
                 </div>
               ) : (
-                <p className="text-zinc-500 italic text-lg">No review written yet. Edit the book to add your thoughts.</p>
+                <p className="text-zinc-500 italic text-base">No review written yet. Edit the book to add your thoughts.</p>
               )}
             </div>
           </motion.div>
