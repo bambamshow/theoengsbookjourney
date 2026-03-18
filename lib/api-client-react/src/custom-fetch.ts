@@ -271,6 +271,10 @@ async function parseSuccessBody(
   }
 }
 
+function getAdminToken(): string | null {
+  try { return sessionStorage.getItem("admin_token"); } catch { return null; }
+}
+
 export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
@@ -284,6 +288,11 @@ export async function customFetch<T = unknown>(
   }
 
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
+
+  if (method !== "GET" && method !== "HEAD") {
+    const token = getAdminToken();
+    if (token) headers.set("authorization", `Bearer ${token}`);
+  }
 
   if (
     typeof init.body === "string" &&

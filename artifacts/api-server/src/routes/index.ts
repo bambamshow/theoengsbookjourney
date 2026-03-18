@@ -3,10 +3,12 @@ import healthRouter from "./health";
 import booksRouter from "./books";
 import seriesRouter from "./series";
 import commentsRouter from "./comments";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
 router.use(booksRouter);
 router.use(seriesRouter);
 router.use(commentsRouter);

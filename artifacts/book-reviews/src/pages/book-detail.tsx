@@ -1,6 +1,7 @@
 import { useRoute, Link } from "wouter";
 import { useBook, useDeleteBookMutation } from "@/hooks/use-books";
 import { useSingleSeries } from "@/hooks/use-series";
+import { useAdmin } from "@/context/admin-context";
 import { Layout } from "@/components/layout";
 import { Loader } from "@/components/ui/loader";
 import { StarRating } from "@/components/star-rating";
@@ -14,8 +15,8 @@ export default function BookDetail() {
   
   const { data: book, isLoading } = useBook(id);
   const { mutate: deleteBook, isPending: isDeleting } = useDeleteBookMutation();
-  
   const { data: series } = useSingleSeries(book?.seriesId || 0);
+  const { isAdmin } = useAdmin();
 
   if (isLoading) return <Layout><Loader /></Layout>;
   if (!book) return <Layout><div className="pt-24 text-center text-white">Book not found</div></Layout>;
@@ -51,25 +52,27 @@ export default function BookDetail() {
               />
             </div>
             
-            <div className="flex gap-2 mt-4">
-              <Link 
-                href={`/book/${book.id}/edit`}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-white/5"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </Link>
-              <button 
-                onClick={() => {
-                  if (confirm("Are you sure you want to delete this book?")) {
-                    deleteBook(book.id);
-                  }
-                }}
-                disabled={isDeleting}
-                className="flex-1 bg-destructive/20 hover:bg-destructive/80 text-destructive-foreground py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-destructive/30"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> {isDeleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="flex gap-2 mt-4">
+                <Link 
+                  href={`/book/${book.id}/edit`}
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-white/5"
+                >
+                  <Edit3 className="w-3.5 h-3.5" /> Edit
+                </Link>
+                <button 
+                  onClick={() => {
+                    if (confirm("Are you sure you want to delete this book?")) {
+                      deleteBook(book.id);
+                    }
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1 bg-destructive/20 hover:bg-destructive/80 text-destructive-foreground py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors border border-destructive/30"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            )}
           </motion.div>
 
           {/* Right Column: Details */}

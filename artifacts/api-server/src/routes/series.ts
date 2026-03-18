@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, seriesTable, booksTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { CreateSeriesBody, UpdateSeriesBody } from "@workspace/api-zod";
+import { requireAdmin } from "../middleware/auth";
 
 const router: IRouter = Router();
 
@@ -18,7 +19,7 @@ router.get("/series", async (_req, res) => {
   }
 });
 
-router.post("/series", async (req, res) => {
+router.post("/series", requireAdmin, async (req, res) => {
   try {
     const body = CreateSeriesBody.parse(req.body);
     const [series] = await db.insert(seriesTable).values({
@@ -58,7 +59,7 @@ router.get("/series/:id", async (req, res) => {
   }
 });
 
-router.put("/series/:id", async (req, res) => {
+router.put("/series/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const body = UpdateSeriesBody.parse(req.body);
@@ -77,7 +78,7 @@ router.put("/series/:id", async (req, res) => {
   }
 });
 
-router.delete("/series/:id", async (req, res) => {
+router.delete("/series/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     await db.delete(seriesTable).where(eq(seriesTable.id, id));

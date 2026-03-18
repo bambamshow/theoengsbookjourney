@@ -1,11 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { BookOpen, Plus, Search, Clapperboard } from "lucide-react";
+import { BookOpen, Plus, LogIn, LogOut, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdmin } from "@/context/admin-context";
+import { LoginModal } from "@/components/login-modal";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [location] = useLocation();
+  const [showLogin, setShowLogin] = useState(false);
+  const { isAdmin, logout } = useAdmin();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,14 +56,40 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/book/new"
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all hover:scale-105 active:scale-95 text-sm font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Book</span>
-            </Link>
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Link 
+                href="/book/new"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all hover:scale-105 active:scale-95 text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Book</span>
+              </Link>
+            )}
+
+            {isAdmin ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
+                  <Shield className="w-3 h-3" />
+                  <span className="hidden sm:inline">Admin</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full text-zinc-400 hover:text-white border border-white/5 hover:border-white/15 transition-all text-sm"
+                  title="Log out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLogin(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-zinc-500 hover:text-zinc-300 border border-white/5 hover:border-white/10 transition-all text-sm"
+                title="Admin login"
+              >
+                <LogIn className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -84,6 +114,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <p>© {new Date().getFullYear()} MyShelf. Designed for cinephile readers.</p>
         </div>
       </footer>
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 }
