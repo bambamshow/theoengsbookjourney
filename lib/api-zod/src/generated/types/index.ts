@@ -7,9 +7,12 @@
  */
 
 export * from "./book";
+export * from "./comment";
 export * from "./createBookInput";
+export * from "./createCommentInput";
 export * from "./createSeriesInput";
 export * from "./errorResponse";
 export * from "./healthStatus";
+export * from "./likeCount";
 export * from "./series";
 export * from "./seriesWithBooks";

@@ -59,6 +59,23 @@ export interface CreateSeriesInput {
   description?: string | null;
 }
 
+export interface Comment {
+  id: number;
+  bookId: number;
+  name: string;
+  comment: string;
+  createdAt: string;
+}
+
+export interface CreateCommentInput {
+  name: string;
+  comment: string;
+}
+
+export interface LikeCount {
+  count: number;
+}
+
 export interface ErrorResponse {
   error: string;
 }

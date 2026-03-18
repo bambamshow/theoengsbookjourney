@@ -18,10 +18,13 @@ import type {
 
 import type {
   Book,
+  Comment,
   CreateBookInput,
+  CreateCommentInput,
   CreateSeriesInput,
   ErrorResponse,
   HealthStatus,
+  LikeCount,
   Series,
   SeriesWithBooks,
 } from "./api.schemas";
@@ -508,6 +511,349 @@ export const useDeleteBook = <
   TContext
 > => {
   return useMutation(getDeleteBookMutationOptions(options));
+};
+
+/**
+ * @summary List comments for a book
+ */
+export const getListCommentsUrl = (id: number) => {
+  return `/api/books/${id}/comments`;
+};
+
+export const listComments = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Comment[]> => {
+  return customFetch<Comment[]>(getListCommentsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCommentsQueryKey = (id: number) => {
+  return [`/api/books/${id}/comments`] as const;
+};
+
+export const getListCommentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listComments>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListCommentsQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listComments>>> = ({
+    signal,
+  }) => listComments(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listComments>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListCommentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listComments>>
+>;
+export type ListCommentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List comments for a book
+ */
+
+export function useListComments<
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listComments>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListCommentsQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a comment to a book
+ */
+export const getCreateCommentUrl = (id: number) => {
+  return `/api/books/${id}/comments`;
+};
+
+export const createComment = async (
+  id: number,
+  createCommentInput: CreateCommentInput,
+  options?: RequestInit,
+): Promise<Comment> => {
+  return customFetch<Comment>(getCreateCommentUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createCommentInput),
+  });
+};
+
+export const getCreateCommentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createComment>>,
+    TError,
+    { id: number; data: BodyType<CreateCommentInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createComment>>,
+  TError,
+  { id: number; data: BodyType<CreateCommentInput> },
+  TContext
+> => {
+  const mutationKey = ["createComment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createComment>>,
+    { id: number; data: BodyType<CreateCommentInput> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return createComment(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCommentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createComment>>
+>;
+export type CreateCommentMutationBody = BodyType<CreateCommentInput>;
+export type CreateCommentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a comment to a book
+ */
+export const useCreateComment = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createComment>>,
+    TError,
+    { id: number; data: BodyType<CreateCommentInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createComment>>,
+  TError,
+  { id: number; data: BodyType<CreateCommentInput> },
+  TContext
+> => {
+  return useMutation(getCreateCommentMutationOptions(options));
+};
+
+/**
+ * @summary Get like count for a book review
+ */
+export const getGetLikesUrl = (id: number) => {
+  return `/api/books/${id}/likes`;
+};
+
+export const getLikes = async (
+  id: number,
+  options?: RequestInit,
+): Promise<LikeCount> => {
+  return customFetch<LikeCount>(getGetLikesUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetLikesQueryKey = (id: number) => {
+  return [`/api/books/${id}/likes`] as const;
+};
+
+export const getGetLikesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLikes>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getLikes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetLikesQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLikes>>> = ({
+    signal,
+  }) => getLikes(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getLikes>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
+};
+
+export type GetLikesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getLikes>>
+>;
+export type GetLikesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get like count for a book review
+ */
+
+export function useGetLikes<
+  TData = Awaited<ReturnType<typeof getLikes>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getLikes>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLikesQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add an anonymous like to a book review
+ */
+export const getAddLikeUrl = (id: number) => {
+  return `/api/books/${id}/likes`;
+};
+
+export const addLike = async (
+  id: number,
+  options?: RequestInit,
+): Promise<LikeCount> => {
+  return customFetch<LikeCount>(getAddLikeUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAddLikeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addLike>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addLike>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["addLike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addLike>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return addLike(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddLikeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addLike>>
+>;
+
+export type AddLikeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add an anonymous like to a book review
+ */
+export const useAddLike = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addLike>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addLike>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getAddLikeMutationOptions(options));
 };
 
 /**

@@ -127,6 +127,86 @@ paths:
         "204":
           description: Deleted
 
+  /books/{id}/comments:
+    get:
+      operationId: listComments
+      tags: [books]
+      summary: List comments for a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createComment
+      tags: [books]
+      summary: Add a comment to a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentInput"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /books/{id}/likes:
+    get:
+      operationId: getLikes
+      tags: [books]
+      summary: Get like count for a book review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Like count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeCount"
+    post:
+      operationId: addLike
+      tags: [books]
+      summary: Add an anonymous like to a book review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated like count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeCount"
+
   /series:
     get:
       operationId: listSeries
@@ -350,6 +430,46 @@ components:
           nullable: true
       required:
         - name
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        name:
+          type: string
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookId
+        - name
+        - comment
+        - createdAt
+
+    CreateCommentInput:
+      type: object
+      properties:
+        name:
+          type: string
+        comment:
+          type: string
+      required:
+        - name
+        - comment
+
+    LikeCount:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+        - count
 
     ErrorResponse:
       type: object

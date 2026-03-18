@@ -135,6 +135,56 @@ export const DeleteBookParams = zod.object({
 });
 
 /**
+ * @summary List comments for a book
+ */
+export const ListCommentsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListCommentsResponseItem = zod.object({
+  id: zod.number(),
+  bookId: zod.number(),
+  name: zod.string(),
+  comment: zod.string(),
+  createdAt: zod.date(),
+});
+export const ListCommentsResponse = zod.array(ListCommentsResponseItem);
+
+/**
+ * @summary Add a comment to a book
+ */
+export const CreateCommentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateCommentBody = zod.object({
+  name: zod.string(),
+  comment: zod.string(),
+});
+
+/**
+ * @summary Get like count for a book review
+ */
+export const GetLikesParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetLikesResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Add an anonymous like to a book review
+ */
+export const AddLikeParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AddLikeResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
  * @summary List all series
  */
 export const ListSeriesResponseItem = zod.object({

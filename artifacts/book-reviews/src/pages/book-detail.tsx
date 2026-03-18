@@ -4,6 +4,7 @@ import { useSingleSeries } from "@/hooks/use-series";
 import { Layout } from "@/components/layout";
 import { Loader } from "@/components/ui/loader";
 import { StarRating } from "@/components/star-rating";
+import { CommentSection } from "@/components/comment-section";
 import { ArrowLeft, Edit3, Trash2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -121,6 +122,8 @@ export default function BookDetail() {
                 <p className="text-zinc-500 italic text-base">No review written yet. Edit the book to add your thoughts.</p>
               )}
             </div>
+
+            <CommentSection bookId={id} />
           </motion.div>
         </div>
       </div>
