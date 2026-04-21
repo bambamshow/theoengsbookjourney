@@ -8,6 +8,7 @@ import { Loader } from "@/components/ui/loader";
 import { ArrowLeft, Save, FolderPlus } from "lucide-react";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAdmin } from "@/context/admin-context";
 
 const seriesSchema = z.object({
   name: z.string().min(1, "Series name is required"),
@@ -19,8 +20,13 @@ type SeriesFormData = z.infer<typeof seriesSchema>;
 export default function SeriesForm() {
   const [, params] = useRoute("/series/:id/edit");
   const [, setLocation] = useLocation();
+  const { isAdmin } = useAdmin();
   const isEditing = !!params?.id;
   const id = isEditing ? parseInt(params.id!, 10) : 0;
+
+  useEffect(() => {
+    if (!isAdmin) setLocation("/series");
+  }, [isAdmin, setLocation]);
 
   const { data: series, isLoading: seriesLoading } = useSingleSeries(id);
   const { mutate: createSeries, isPending: isCreating } = useCreateSeriesMutation();

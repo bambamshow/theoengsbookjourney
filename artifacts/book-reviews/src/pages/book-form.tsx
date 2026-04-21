@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useBook, useCreateBookMutation, useUpdateBookMutation } from "@/hooks/use-books";
 import { useSeries, useCreateSeriesMutation } from "@/hooks/use-series";
+import { useAdmin } from "@/context/admin-context";
 import { Layout } from "@/components/layout";
 import { StarRating } from "@/components/star-rating";
 import { Loader } from "@/components/ui/loader";
@@ -32,8 +33,13 @@ function toDateInputValue(isoString?: string | null): string {
 export default function BookForm() {
   const [, params] = useRoute("/book/:id/edit");
   const [, setLocation] = useLocation();
+  const { isAdmin } = useAdmin();
   const isEditing = !!params?.id;
   const id = isEditing ? parseInt(params.id!, 10) : 0;
+
+  useEffect(() => {
+    if (!isAdmin) setLocation("/");
+  }, [isAdmin, setLocation]);
 
   const { data: book, isLoading: bookLoading } = useBook(id);
   const { data: seriesList, refetch: refetchSeries } = useSeries();
@@ -72,6 +78,14 @@ export default function BookForm() {
   });
 
   const coverUrlPreview = watch("coverUrl");
+  const selectedSeriesId = watch("seriesId");
+  const hasSeries = (seriesList?.length ?? 0) > 0;
+  const noSeriesAvailable = !hasSeries;
+
+  // Auto-open inline creation form when there are no series at all
+  useEffect(() => {
+    if (noSeriesAvailable) setShowNewSeries(true);
+  }, [noSeriesAvailable]);
 
   useEffect(() => {
     if (isEditing && book) {
@@ -208,22 +222,29 @@ export default function BookForm() {
                     <div className="flex gap-2">
                       <select
                         {...register("seriesId", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
-                        className="flex-1 bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
+                        disabled={noSeriesAvailable}
+                        className="flex-1 bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <option value="">No Series</option>
+                        <option value="">Standalone</option>
                         {seriesList?.map(s => (
                           <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                       </select>
-                      <button
-                        type="button"
-                        onClick={() => { setShowNewSeries(v => !v); setNewSeriesName(""); setNewSeriesError(""); }}
-                        title="Create new series"
-                        className="px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white transition-all"
-                      >
-                        {showNewSeries ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                      </button>
+                      {hasSeries && (
+                        <button
+                          type="button"
+                          onClick={() => { setShowNewSeries(v => !v); setNewSeriesName(""); setNewSeriesError(""); }}
+                          title="Create new series"
+                          className="px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white transition-all"
+                        >
+                          {showNewSeries ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        </button>
+                      )}
                     </div>
+
+                    {noSeriesAvailable && (
+                      <p className="text-xs text-zinc-500">No series yet — create one below or leave as Standalone.</p>
+                    )}
 
                     {/* Inline new series form */}
                     {showNewSeries && (
@@ -254,15 +275,21 @@ export default function BookForm() {
                     {newSeriesError && <p className="text-primary text-xs">{newSeriesError}</p>}
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-300">Order in Series</label>
-                    <input
-                      type="number"
-                      {...register("seriesOrder", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                      placeholder="e.g. 1"
-                    />
-                  </div>
+                  {selectedSeriesId ? (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-300">Order in Series</label>
+                      <input
+                        type="number"
+                        {...register("seriesOrder", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
+                        className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                        placeholder="e.g. 1"
+                      />
+                    </div>
+                  ) : (
+                    <div className="hidden md:flex items-end pb-3">
+                      <p className="text-xs text-zinc-600 italic">Standalone books don't need a series order.</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Finished reading date */}

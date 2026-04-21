@@ -6,7 +6,7 @@ import { SeriesRow } from "@/components/series-row";
 import { BookCard } from "@/components/book-card";
 import { Loader } from "@/components/ui/loader";
 import { useAdmin } from "@/context/admin-context";
-import { Plus, BookOpen, LayoutGrid, Layers } from "lucide-react";
+import { Plus, BookOpen, LayoutGrid, Layers, ArrowDownWideNarrow } from "lucide-react";
 import { Link } from "wouter";
 import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
 import {
@@ -26,7 +26,16 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 type ViewMode = "series" | "all";
-type SortBy = "custom" | "title" | "author" | "rating" | "series";
+type SortBy = "custom" | "title" | "author" | "rating" | "series" | "finished";
+
+const SORT_LABELS: Record<SortBy, string> = {
+  custom: "Custom Order",
+  title: "Title (A-Z)",
+  author: "Author (A-Z)",
+  rating: "Rating (High-Low)",
+  series: "Series Name",
+  finished: "Finish Date (Recent)",
+};
 
 const ORDER_KEY = "bookshelf-order";
 const VIEW_KEY = "bookshelf-view";
@@ -82,6 +91,13 @@ function sortBooks(
           return (a.seriesOrder ?? 999) - (b.seriesOrder ?? 999);
         return a.title.localeCompare(b.title);
       });
+    case "finished":
+      return sorted.sort((a, b) => {
+        const ta = a.finishedAt ? new Date(a.finishedAt).getTime() : 0;
+        const tb = b.finishedAt ? new Date(b.finishedAt).getTime() : 0;
+        if (ta !== tb) return tb - ta;
+        return a.title.localeCompare(b.title);
+      });
     default:
       return sorted;
   }
@@ -110,13 +126,13 @@ export default function Home() {
   const { data: seriesList, isLoading: seriesLoading } = useSeries();
   const { isAdmin } = useAdmin();
 
-  const [viewMode, setViewMode] = useState<ViewMode>("series");
+  const [viewMode, setViewMode] = useState<ViewMode>("all");
   const [sortBy, setSortBy] = useState<SortBy>("custom");
   const [displayOrder, setDisplayOrder] = useState<number[] | null>(null);
 
   useEffect(() => {
     setDisplayOrder(loadOrder());
-    setViewMode((localStorage.getItem(VIEW_KEY) as ViewMode) || "series");
+    setViewMode((localStorage.getItem(VIEW_KEY) as ViewMode) || "all");
     setSortBy((localStorage.getItem(SORT_KEY) as SortBy) || "custom");
   }, []);
 
@@ -242,31 +258,23 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Sort controls */}
+              {/* Sort dropdown */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">Sort:</span>
-                <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-                  {(
-                    [
-                      { value: "custom", label: "Custom" },
-                      { value: "title", label: "Title" },
-                      { value: "author", label: "Author" },
-                      { value: "rating", label: "Stars" },
-                      { value: "series", label: "Series" },
-                    ] as { value: SortBy; label: string }[]
-                  ).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      onClick={() => handleSort(value)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                        sortBy === value
-                          ? "bg-white/15 text-white"
-                          : "text-zinc-400 hover:text-white"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                <span className="text-xs text-zinc-500">Sort by:</span>
+                <div className="relative">
+                  <ArrowDownWideNarrow className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => handleSort(e.target.value as SortBy)}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-8 pr-8 py-1.5 text-xs font-medium text-white focus:outline-none focus:border-primary appearance-none cursor-pointer transition-all"
+                  >
+                    {(Object.keys(SORT_LABELS) as SortBy[]).map((value) => (
+                      <option key={value} value={value} className="bg-zinc-900 text-white">
+                        {SORT_LABELS[value]}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">▾</span>
                 </div>
                 {isDnDActive && (
                   <span className="text-xs text-zinc-600 hidden sm:inline">Drag to reorder</span>
