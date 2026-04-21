@@ -8,6 +8,7 @@ interface AdminContextValue {
   token: string | null;
   showEntry: boolean;
   dismissEntry: () => void;
+  reopenEntry: () => void;
   login: (password: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -30,6 +31,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const dismissEntry = useCallback(() => {
     try { sessionStorage.setItem(ENTRY_KEY, "1"); } catch {}
     setShowEntry(false);
+  }, []);
+
+  const reopenEntry = useCallback(() => {
+    try { sessionStorage.removeItem(ENTRY_KEY); } catch {}
+    setShowEntry(true);
   }, []);
 
   const login = useCallback(async (password: string): Promise<boolean> => {
@@ -59,7 +65,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AdminContext.Provider value={{ isAdmin: !!token, token, showEntry, dismissEntry, login, logout }}>
+    <AdminContext.Provider value={{ isAdmin: !!token, token, showEntry, dismissEntry, reopenEntry, login, logout }}>
       {children}
     </AdminContext.Provider>
   );

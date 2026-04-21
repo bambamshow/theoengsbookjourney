@@ -8,9 +8,9 @@ import { EntryModal } from "@/components/entry-modal";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [showLogin, setShowLogin] = useState(false);
-  const { isAdmin, logout, showEntry } = useAdmin();
+  const { isAdmin, logout, showEntry, reopenEntry } = useAdmin();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,14 +32,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
+            <button
+              onClick={() => { navigate("/"); reopenEntry(); }}
+              className="flex items-center gap-2 group"
+            >
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-[0_0_15px_rgba(229,9,20,0.5)] transition-transform group-hover:scale-110">
                 <BookOpen className="w-4 h-4" />
               </div>
               <span className="font-display font-bold text-xl tracking-wider text-white">
                 MY<span className="text-primary">SHELF</span>
               </span>
-            </Link>
+            </button>
 
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
               <Link 

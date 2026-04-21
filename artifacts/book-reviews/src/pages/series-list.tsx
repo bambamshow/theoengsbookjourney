@@ -5,10 +5,12 @@ import { Link } from "wouter";
 import { FolderOpen, Edit, Trash } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDeleteSeriesMutation } from "@/hooks/use-series";
+import { useAdmin } from "@/context/admin-context";
 
 export default function SeriesList() {
   const { data: seriesList, isLoading } = useSeries();
   const { mutate: deleteSeries, isPending: isDeleting } = useDeleteSeriesMutation();
+  const { isAdmin } = useAdmin();
 
   if (isLoading) return <Layout><Loader /></Layout>;
 
@@ -16,13 +18,15 @@ export default function SeriesList() {
     <Layout>
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         <div className="flex items-center justify-between mb-12">
-          <h1 className="text-4xl font-display font-bold text-white">Manage Series</h1>
-          <Link 
-            href="/series/new"
-            className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md font-medium flex items-center gap-2 transition-all hover:-translate-y-0.5"
-          >
-            Create Series
-          </Link>
+          <h1 className="text-4xl font-display font-bold text-white">Series</h1>
+          {isAdmin && (
+            <Link 
+              href="/series/new"
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md font-medium flex items-center gap-2 transition-all hover:-translate-y-0.5"
+            >
+              Create Series
+            </Link>
+          )}
         </div>
 
         {(!seriesList || seriesList.length === 0) ? (
@@ -51,25 +55,27 @@ export default function SeriesList() {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Link 
-                    href={`/series/${series.id}/edit`}
-                    className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Link>
-                  <button 
-                    onClick={() => {
-                      if (confirm(`Delete series "${series.name}"? Books in this series will not be deleted, but will become standalone.`)) {
-                        deleteSeries(series.id);
-                      }
-                    }}
-                    disabled={isDeleting}
-                    className="p-3 rounded-full bg-destructive/10 hover:bg-destructive/80 text-destructive border border-transparent hover:border-destructive/50 transition-colors"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="flex items-center gap-3 shrink-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Link 
+                      href={`/series/${series.id}/edit`}
+                      className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        if (confirm(`Delete series "${series.name}"? Books in this series will not be deleted, but will become standalone.`)) {
+                          deleteSeries(series.id);
+                        }
+                      }}
+                      disabled={isDeleting}
+                      className="p-3 rounded-full bg-destructive/10 hover:bg-destructive/80 text-destructive border border-transparent hover:border-destructive/50 transition-colors"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
