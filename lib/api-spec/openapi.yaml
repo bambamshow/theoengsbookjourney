@@ -341,10 +341,6 @@ components:
         seriesOrder:
           type: integer
           nullable: true
-        startedAt:
-          type: string
-          format: date-time
-          nullable: true
         finishedAt:
           type: string
           format: date-time
@@ -381,10 +377,6 @@ components:
           nullable: true
         seriesOrder:
           type: integer
-          nullable: true
-        startedAt:
-          type: string
-          format: date-time
           nullable: true
         finishedAt:
           type: string
