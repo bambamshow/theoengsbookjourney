@@ -5,6 +5,7 @@ import { Layout } from "@/components/layout";
 import { SeriesRow } from "@/components/series-row";
 import { BookCard } from "@/components/book-card";
 import { Loader } from "@/components/ui/loader";
+import { useAdmin } from "@/context/admin-context";
 import { Plus, BookOpen, LayoutGrid, Layers } from "lucide-react";
 import { Link } from "wouter";
 import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
@@ -107,6 +108,7 @@ const GRID = "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:g
 export default function Home() {
   const { data: books, isLoading: booksLoading } = useBooks();
   const { data: seriesList, isLoading: seriesLoading } = useSeries();
+  const { isAdmin } = useAdmin();
 
   const [viewMode, setViewMode] = useState<ViewMode>("series");
   const [sortBy, setSortBy] = useState<SortBy>("custom");
@@ -185,15 +187,17 @@ export default function Home() {
           <p className="text-base md:text-lg text-zinc-400 max-w-2xl">
             Keep track of your reading journey. Rate, review, and organize your favorite books and series in one cinematic place.
           </p>
-          <div className="mt-6">
-            <Link
-              href="/book/new"
-              className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-md font-semibold inline-flex items-center gap-2 transition-all hover:scale-105 text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Add a Book
-            </Link>
-          </div>
+          {isAdmin && (
+            <div className="mt-6">
+              <Link
+                href="/book/new"
+                className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-md font-semibold inline-flex items-center gap-2 transition-all hover:scale-105 text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add a Book
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
