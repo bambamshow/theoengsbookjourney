@@ -5,6 +5,7 @@ import { Layout } from "@/components/layout";
 import { SeriesRow } from "@/components/series-row";
 import { BookCard } from "@/components/book-card";
 import { Loader } from "@/components/ui/loader";
+import { CurrentlyReadingSection } from "@/components/currently-reading";
 import { useAdmin } from "@/context/admin-context";
 import { Plus, BookOpen, LayoutGrid, Layers, ArrowDownWideNarrow } from "lucide-react";
 import { Link } from "wouter";
@@ -148,16 +149,24 @@ export default function Home() {
     seriesList?.map((s) => [s.id, s.name]) ?? []
   );
 
+  // Currently-reading: started but not finished. Show only the most recently started one.
+  const currentlyReading = (books ?? [])
+    .filter((b) => b.startedAt && !b.finishedAt)
+    .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime())[0] ?? null;
+
+  // Exclude the currently-reading book from the shelf grid
+  const shelfBooks = (books ?? []).filter((b) => b.id !== currentlyReading?.id);
+
   const booksBySeries = new Map<number, Book[]>();
-  const standaloneBooks = books?.filter((b) => !b.seriesId) || [];
+  const standaloneBooks = shelfBooks.filter((b) => !b.seriesId);
 
   seriesList?.forEach((series) => {
-    const seriesBooks = books?.filter((b) => b.seriesId === series.id) ?? [];
+    const seriesBooks = shelfBooks.filter((b) => b.seriesId === series.id);
     if (seriesBooks.length > 0) booksBySeries.set(series.id, seriesBooks);
   });
 
-  const hasContent = books && books.length > 0;
-  const allBooks = books ?? [];
+  const hasContent = shelfBooks.length > 0;
+  const allBooks = shelfBooks;
 
   const isDnDActive = viewMode === "all" && sortBy === "custom";
   const sortedAllBooks = sortBooks(allBooks, sortBy, displayOrder, seriesNameMap);
@@ -190,32 +199,19 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="relative pt-24 pb-12 px-4 sm:px-6 lg:px-8 border-b border-white/5">
-        <div
-          className="absolute inset-0 z-0 opacity-40 bg-cover bg-center"
-          style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/cinematic-bg.png)` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10" />
-        <div className="relative z-20 max-w-[1600px] mx-auto">
-          <h1 className="text-3xl md:text-5xl font-display font-extrabold text-white mb-3">
-            Keep <span className="text-primary">Reading!</span>
-          </h1>
-          <p className="text-base md:text-lg text-zinc-400 max-w-2xl">
-            Keep track of your reading journey. Rate, review, and organize your favorite books and series in one cinematic place.
-          </p>
-          {isAdmin && (
-            <div className="mt-6">
-              <Link
-                href="/book/new"
-                className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-md font-semibold inline-flex items-center gap-2 transition-all hover:scale-105 text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Add a Book
-              </Link>
-            </div>
-          )}
+      <CurrentlyReadingSection book={currentlyReading} />
+
+      {isAdmin && (
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex justify-end">
+          <Link
+            href="/book/new"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-md font-medium inline-flex items-center gap-2 transition-all text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add a Finished Book
+          </Link>
         </div>
-      </div>
+      )}
 
       <div className="max-w-[1600px] mx-auto pb-24">
         {!hasContent ? (

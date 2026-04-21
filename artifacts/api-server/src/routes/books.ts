@@ -14,6 +14,7 @@ function mapBook(b: typeof booksTable.$inferSelect) {
     rating: b.rating ?? null,
     seriesId: b.seriesId ?? null,
     seriesOrder: b.seriesOrder ?? null,
+    startedAt: b.startedAt ? b.startedAt.toISOString() : null,
     finishedAt: b.finishedAt ? b.finishedAt.toISOString() : null,
   };
 }
@@ -39,6 +40,7 @@ router.post("/books", requireAdmin, async (req, res) => {
       rating: body.rating ?? null,
       seriesId: body.seriesId ?? null,
       seriesOrder: body.seriesOrder ?? null,
+      startedAt: body.startedAt ? new Date(body.startedAt) : null,
       finishedAt: body.finishedAt ? new Date(body.finishedAt) : null,
     }).returning();
     res.status(201).json(mapBook(book));
@@ -72,6 +74,7 @@ router.put("/books/:id", requireAdmin, async (req, res) => {
       rating: body.rating ?? null,
       seriesId: body.seriesId ?? null,
       seriesOrder: body.seriesOrder ?? null,
+      startedAt: body.startedAt ? new Date(body.startedAt) : null,
       finishedAt: body.finishedAt ? new Date(body.finishedAt) : null,
     }).where(eq(booksTable.id, id)).returning();
     if (!book) return res.status(404).json({ error: "Book not found" });

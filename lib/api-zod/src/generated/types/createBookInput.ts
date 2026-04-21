@@ -18,5 +18,6 @@ export interface CreateBookInput {
   rating?: number | null;
   seriesId?: number | null;
   seriesOrder?: number | null;
+  startedAt?: Date | null;
   finishedAt?: Date | null;
 }
