@@ -4,12 +4,13 @@ import { BookOpen, Plus, LogIn, LogOut, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdmin } from "@/context/admin-context";
 import { LoginModal } from "@/components/login-modal";
+import { EntryModal } from "@/components/entry-modal";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [location] = useLocation();
   const [showLogin, setShowLogin] = useState(false);
-  const { isAdmin, logout } = useAdmin();
+  const { isAdmin, logout, showEntry } = useAdmin();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -116,6 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </footer>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      {showEntry && <EntryModal />}
     </div>
   );
 }
