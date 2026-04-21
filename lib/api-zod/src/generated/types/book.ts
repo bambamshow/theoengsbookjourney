@@ -19,5 +19,6 @@ export interface Book {
   rating?: number | null;
   seriesId?: number | null;
   seriesOrder?: number | null;
+  finishedAt?: Date | null;
   createdAt: Date;
 }

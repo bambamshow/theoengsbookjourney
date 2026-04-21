@@ -3,15 +3,14 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useBook, useCreateBookMutation, useUpdateBookMutation } from "@/hooks/use-books";
-import { useSeries } from "@/hooks/use-series";
+import { useSeries, useCreateSeriesMutation } from "@/hooks/use-series";
 import { Layout } from "@/components/layout";
 import { StarRating } from "@/components/star-rating";
 import { Loader } from "@/components/ui/loader";
-import { ArrowLeft, Save, Image as ImageIcon } from "lucide-react";
-import { useEffect } from "react";
+import { ArrowLeft, Save, Image as ImageIcon, Plus, Check, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
-// Validating data specifically for our inputs
 const bookSchema = z.object({
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
@@ -20,9 +19,15 @@ const bookSchema = z.object({
   rating: z.coerce.number().min(0.5).max(5).optional().nullable(),
   seriesId: z.coerce.number().optional().nullable(),
   seriesOrder: z.coerce.number().optional().nullable(),
+  finishedAt: z.string().optional().nullable(),
 });
 
 type BookFormData = z.infer<typeof bookSchema>;
+
+function toDateInputValue(isoString?: string | null): string {
+  if (!isoString) return "";
+  return isoString.slice(0, 10);
+}
 
 export default function BookForm() {
   const [, params] = useRoute("/book/:id/edit");
@@ -31,12 +36,18 @@ export default function BookForm() {
   const id = isEditing ? parseInt(params.id!, 10) : 0;
 
   const { data: book, isLoading: bookLoading } = useBook(id);
-  const { data: seriesList } = useSeries();
-  
+  const { data: seriesList, refetch: refetchSeries } = useSeries();
+
   const { mutate: createBook, isPending: isCreating } = useCreateBookMutation();
   const { mutate: updateBook, isPending: isUpdating } = useUpdateBookMutation(id);
+  const { mutate: createSeries, isPending: isCreatingSeries } = useCreateSeriesMutation();
 
   const isPending = isCreating || isUpdating;
+
+  // Inline new-series state
+  const [showNewSeries, setShowNewSeries] = useState(false);
+  const [newSeriesName, setNewSeriesName] = useState("");
+  const [newSeriesError, setNewSeriesError] = useState("");
 
   const {
     register,
@@ -44,6 +55,7 @@ export default function BookForm() {
     control,
     watch,
     reset,
+    setValue,
     formState: { errors }
   } = useForm<BookFormData>({
     resolver: zodResolver(bookSchema),
@@ -55,10 +67,10 @@ export default function BookForm() {
       rating: null,
       seriesId: null,
       seriesOrder: null,
+      finishedAt: null,
     }
   });
 
-  // Watch cover URL for live preview
   const coverUrlPreview = watch("coverUrl");
 
   useEffect(() => {
@@ -71,19 +83,19 @@ export default function BookForm() {
         rating: book.rating,
         seriesId: book.seriesId,
         seriesOrder: book.seriesOrder,
+        finishedAt: toDateInputValue(book.finishedAt),
       });
     }
   }, [isEditing, book, reset]);
 
   const onSubmit = (data: BookFormData) => {
-    // Clean up nulls
     const payload = {
       ...data,
       seriesId: data.seriesId || null,
       seriesOrder: data.seriesOrder || null,
       rating: data.rating || null,
+      finishedAt: data.finishedAt ? new Date(data.finishedAt).toISOString() : null,
     };
-
     if (isEditing) {
       updateBook(payload);
     } else {
@@ -91,19 +103,36 @@ export default function BookForm() {
     }
   };
 
+  function handleCreateSeries() {
+    if (!newSeriesName.trim()) return setNewSeriesError("Series name is required.");
+    setNewSeriesError("");
+    createSeries(
+      { name: newSeriesName.trim() },
+      {
+        onSuccess: async (created) => {
+          await refetchSeries();
+          setValue("seriesId", created.id);
+          setNewSeriesName("");
+          setShowNewSeries(false);
+        },
+        onError: () => setNewSeriesError("Failed to create series."),
+      }
+    );
+  }
+
   if (isEditing && bookLoading) return <Layout><Loader /></Layout>;
 
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24">
-        <Link 
-          href={isEditing ? `/book/${id}` : "/"} 
+        <Link
+          href={isEditing ? `/book/${id}` : "/"}
           className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8 text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4" /> Cancel
         </Link>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl"
@@ -113,14 +142,14 @@ export default function BookForm() {
           </h1>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col md:flex-row gap-12">
-            
+
             {/* Left: Preview */}
             <div className="w-full md:w-1/3 shrink-0 flex flex-col gap-4">
               <div className="aspect-[2/3] rounded-lg overflow-hidden bg-zinc-800 border border-white/5 shadow-xl flex flex-col items-center justify-center relative">
                 {coverUrlPreview && !errors.coverUrl ? (
-                  <img 
-                    src={coverUrlPreview} 
-                    alt="Cover preview" 
+                  <img
+                    src={coverUrlPreview}
+                    alt="Cover preview"
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&q=80";
@@ -140,7 +169,7 @@ export default function BookForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-300">Title <span className="text-primary">*</span></label>
-                  <input 
+                  <input
                     {...register("title")}
                     className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="e.g. Dune"
@@ -150,7 +179,7 @@ export default function BookForm() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-300">Author <span className="text-primary">*</span></label>
-                  <input 
+                  <input
                     {...register("author")}
                     className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     placeholder="e.g. Frank Herbert"
@@ -161,7 +190,7 @@ export default function BookForm() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-300">Cover Image URL <span className="text-primary">*</span></label>
-                <input 
+                <input
                   {...register("coverUrl")}
                   className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono text-sm"
                   placeholder="https://example.com/cover.jpg"
@@ -169,27 +198,80 @@ export default function BookForm() {
                 {errors.coverUrl && <p className="text-primary text-xs mt-1">{errors.coverUrl.message}</p>}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-xl bg-black/30 border border-white/5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300">Series (Optional)</label>
-                  <select 
-                    {...register("seriesId", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
-                  >
-                    <option value="">No Series</option>
-                    {seriesList?.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
+              {/* Series + Date row */}
+              <div className="p-6 rounded-xl bg-black/30 border border-white/5 space-y-5">
+
+                {/* Series selector with inline creation */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-300">Series (Optional)</label>
+                    <div className="flex gap-2">
+                      <select
+                        {...register("seriesId", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
+                        className="flex-1 bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none"
+                      >
+                        <option value="">No Series</option>
+                        {seriesList?.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => { setShowNewSeries(v => !v); setNewSeriesName(""); setNewSeriesError(""); }}
+                        title="Create new series"
+                        className="px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white transition-all"
+                      >
+                        {showNewSeries ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {/* Inline new series form */}
+                    {showNewSeries && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-2 mt-2"
+                      >
+                        <input
+                          type="text"
+                          value={newSeriesName}
+                          onChange={e => { setNewSeriesName(e.target.value); setNewSeriesError(""); }}
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleCreateSeries(); } }}
+                          placeholder="New series name"
+                          autoFocus
+                          className="flex-1 bg-zinc-900 border border-primary/40 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateSeries}
+                          disabled={isCreatingSeries}
+                          className="px-3 py-2 rounded-md bg-primary hover:bg-primary/90 text-white transition-all disabled:opacity-50"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    )}
+                    {newSeriesError && <p className="text-primary text-xs">{newSeriesError}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-300">Order in Series</label>
+                    <input
+                      type="number"
+                      {...register("seriesOrder", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
+                      className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      placeholder="e.g. 1"
+                    />
+                  </div>
                 </div>
 
+                {/* Finished reading date */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300">Order in Series</label>
-                  <input 
-                    type="number"
-                    {...register("seriesOrder", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                    placeholder="e.g. 1"
+                  <label className="text-sm font-medium text-zinc-300">Finished Reading Date</label>
+                  <input
+                    type="date"
+                    {...register("finishedAt")}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -201,9 +283,9 @@ export default function BookForm() {
                   control={control}
                   render={({ field }) => (
                     <div className="bg-black/30 inline-block p-3 rounded-lg border border-white/5">
-                      <StarRating 
-                        value={field.value || 0} 
-                        onChange={field.onChange} 
+                      <StarRating
+                        value={field.value || 0}
+                        onChange={field.onChange}
                         size="lg"
                       />
                     </div>
@@ -213,7 +295,7 @@ export default function BookForm() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-300">Review</label>
-                <textarea 
+                <textarea
                   {...register("review")}
                   rows={8}
                   className="w-full bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-serif text-lg leading-relaxed"

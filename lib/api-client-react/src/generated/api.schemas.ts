@@ -22,6 +22,7 @@ export interface Book {
   rating?: number | null;
   seriesId?: number | null;
   seriesOrder?: number | null;
+  finishedAt?: string | null;
   createdAt: string;
 }
 
@@ -37,6 +38,7 @@ export interface CreateBookInput {
   rating?: number | null;
   seriesId?: number | null;
   seriesOrder?: number | null;
+  finishedAt?: string | null;
 }
 
 export interface Series {

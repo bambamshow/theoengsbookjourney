@@ -34,6 +34,7 @@ export const ListBooksResponseItem = zod.object({
     .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
+  finishedAt: zod.date().nullish(),
   createdAt: zod.date(),
 });
 export const ListBooksResponse = zod.array(ListBooksResponseItem);
@@ -56,6 +57,7 @@ export const CreateBookBody = zod.object({
     .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
+  finishedAt: zod.date().nullish(),
 });
 
 /**
@@ -81,6 +83,7 @@ export const GetBookResponse = zod.object({
     .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
+  finishedAt: zod.date().nullish(),
   createdAt: zod.date(),
 });
 
@@ -106,6 +109,7 @@ export const UpdateBookBody = zod.object({
     .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
+  finishedAt: zod.date().nullish(),
 });
 
 export const updateBookResponseRatingMin = 0.5;
@@ -124,6 +128,7 @@ export const UpdateBookResponse = zod.object({
     .nullish(),
   seriesId: zod.number().nullish(),
   seriesOrder: zod.number().nullish(),
+  finishedAt: zod.date().nullish(),
   createdAt: zod.date(),
 });
 
@@ -232,6 +237,7 @@ export const GetSeriesResponse = zod.object({
         .nullish(),
       seriesId: zod.number().nullish(),
       seriesOrder: zod.number().nullish(),
+      finishedAt: zod.date().nullish(),
       createdAt: zod.date(),
     }),
   ),

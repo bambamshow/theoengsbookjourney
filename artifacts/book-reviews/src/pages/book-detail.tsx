@@ -111,7 +111,11 @@ export default function BookDetail() {
               
               <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Added {new Date(book.createdAt).toLocaleDateString()}</span>
+                {book.finishedAt ? (
+                  <span>Finished {new Date(book.finishedAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</span>
+                ) : (
+                  <span>Added {new Date(book.createdAt).toLocaleDateString()}</span>
+                )}
               </div>
             </div>
 

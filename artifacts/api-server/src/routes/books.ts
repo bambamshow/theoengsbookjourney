@@ -6,17 +6,22 @@ import { requireAdmin } from "../middleware/auth";
 
 const router: IRouter = Router();
 
+function mapBook(b: typeof booksTable.$inferSelect) {
+  return {
+    ...b,
+    coverUrl: b.coverUrl,
+    review: b.review ?? null,
+    rating: b.rating ?? null,
+    seriesId: b.seriesId ?? null,
+    seriesOrder: b.seriesOrder ?? null,
+    finishedAt: b.finishedAt ? b.finishedAt.toISOString() : null,
+  };
+}
+
 router.get("/books", async (_req, res) => {
   try {
     const books = await db.select().from(booksTable).orderBy(booksTable.createdAt);
-    res.json(books.map(b => ({
-      ...b,
-      coverUrl: b.coverUrl,
-      seriesId: b.seriesId ?? null,
-      seriesOrder: b.seriesOrder ?? null,
-      review: b.review ?? null,
-      rating: b.rating ?? null,
-    })));
+    res.json(books.map(mapBook));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -34,14 +39,9 @@ router.post("/books", requireAdmin, async (req, res) => {
       rating: body.rating ?? null,
       seriesId: body.seriesId ?? null,
       seriesOrder: body.seriesOrder ?? null,
+      finishedAt: body.finishedAt ? new Date(body.finishedAt) : null,
     }).returning();
-    res.status(201).json({
-      ...book,
-      review: book.review ?? null,
-      rating: book.rating ?? null,
-      seriesId: book.seriesId ?? null,
-      seriesOrder: book.seriesOrder ?? null,
-    });
+    res.status(201).json(mapBook(book));
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: String(err) });
@@ -53,13 +53,7 @@ router.get("/books/:id", async (req, res) => {
     const id = parseInt(req.params.id);
     const [book] = await db.select().from(booksTable).where(eq(booksTable.id, id));
     if (!book) return res.status(404).json({ error: "Book not found" });
-    res.json({
-      ...book,
-      review: book.review ?? null,
-      rating: book.rating ?? null,
-      seriesId: book.seriesId ?? null,
-      seriesOrder: book.seriesOrder ?? null,
-    });
+    res.json(mapBook(book));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -78,15 +72,10 @@ router.put("/books/:id", requireAdmin, async (req, res) => {
       rating: body.rating ?? null,
       seriesId: body.seriesId ?? null,
       seriesOrder: body.seriesOrder ?? null,
+      finishedAt: body.finishedAt ? new Date(body.finishedAt) : null,
     }).where(eq(booksTable.id, id)).returning();
     if (!book) return res.status(404).json({ error: "Book not found" });
-    res.json({
-      ...book,
-      review: book.review ?? null,
-      rating: book.rating ?? null,
-      seriesId: book.seriesId ?? null,
-      seriesOrder: book.seriesOrder ?? null,
-    });
+    res.json(mapBook(book));
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: String(err) });
