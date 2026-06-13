@@ -1,5 +1,5 @@
 import { BookCard } from "./book-card";
-import type { Book } from "@/lib/local-store";
+import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
 import { Link } from "wouter";
 
 interface SeriesRowProps {

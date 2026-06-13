@@ -9,7 +9,7 @@ import { useAdmin } from "@/context/admin-context";
 import { Plus, BookOpen, LayoutGrid, Layers, ArrowDownWideNarrow, Library } from "lucide-react";
 import { IsometricShelf } from "@/components/isometric-shelf";
 import { Link } from "wouter";
-import type { Book } from "@/lib/local-store";
+import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
 import {
   DndContext,
   DragEndEvent,

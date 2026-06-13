@@ -39,9 +39,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (password: string): Promise<boolean> => {
-    const expected = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
-    const isValid = expected ? password === expected : password.length > 0;
-    if (isValid) {
+    const res = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (res.ok) {
       try {
         sessionStorage.setItem(TOKEN_KEY, password);
         sessionStorage.setItem(ENTRY_KEY, "1");
