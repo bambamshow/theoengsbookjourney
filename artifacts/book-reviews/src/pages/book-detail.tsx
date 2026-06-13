@@ -109,6 +109,12 @@ export default function BookDetail() {
                 <span className="text-zinc-500 italic text-sm">No rating yet</span>
               )}
               
+              {book.pages && (
+                <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{book.pages.toLocaleString()} pages</span>
+                </div>
+              )}
               <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
                 <Calendar className="w-3.5 h-3.5" />
                 {book.finishedAt ? (

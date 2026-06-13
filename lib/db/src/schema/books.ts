@@ -12,6 +12,7 @@ export const booksTable = pgTable("books", {
   rating: real("rating"),
   seriesId: integer("series_id").references(() => seriesTable.id, { onDelete: "set null" }),
   seriesOrder: integer("series_order"),
+  pages: integer("pages"),
   finishedAt: timestamp("finished_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

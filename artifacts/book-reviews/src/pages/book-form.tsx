@@ -20,6 +20,7 @@ const bookSchema = z.object({
   rating: z.coerce.number().min(0.5).max(5).optional().nullable(),
   seriesId: z.coerce.number().optional().nullable(),
   seriesOrder: z.coerce.number().optional().nullable(),
+  pages: z.coerce.number().int().min(1).optional().nullable(),
   finishedAt: z.string().optional().nullable(),
 });
 
@@ -73,6 +74,7 @@ export default function BookForm() {
       rating: null,
       seriesId: null,
       seriesOrder: null,
+      pages: null,
       finishedAt: null,
     }
   });
@@ -97,6 +99,7 @@ export default function BookForm() {
         rating: book.rating,
         seriesId: book.seriesId,
         seriesOrder: book.seriesOrder,
+        pages: book.pages ?? null,
         finishedAt: toDateInputValue(book.finishedAt),
       });
     }
@@ -107,6 +110,7 @@ export default function BookForm() {
       ...data,
       seriesId: data.seriesId || null,
       seriesOrder: data.seriesOrder || null,
+      pages: data.pages || null,
       rating: data.rating || null,
       finishedAt: data.finishedAt ? new Date(data.finishedAt).toISOString() : null,
     };
@@ -292,14 +296,27 @@ export default function BookForm() {
                   )}
                 </div>
 
-                {/* Finished reading date */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-300">Finished Reading Date</label>
-                  <input
-                    type="date"
-                    {...register("finishedAt")}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all [color-scheme:dark]"
-                  />
+                {/* Pages + Finished reading date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-300">Number of Pages</label>
+                    <input
+                      type="number"
+                      min={1}
+                      {...register("pages", { setValueAs: v => v === "" ? null : parseInt(v, 10) })}
+                      className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                      placeholder="e.g. 432"
+                    />
+                    <p className="text-xs text-zinc-600">Used to set book spine width on the shelf</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-300">Finished Reading Date</label>
+                    <input
+                      type="date"
+                      {...register("finishedAt")}
+                      className="w-full bg-zinc-900 border border-white/10 rounded-md px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all [color-scheme:dark]"
+                    />
+                  </div>
                 </div>
               </div>
 
