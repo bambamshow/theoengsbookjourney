@@ -41,6 +41,10 @@ export default function BookDetail() {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="w-full max-w-[220px] shrink-0"
           >
+            <Link href="/" className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors mb-4 text-sm font-medium">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Library
+            </Link>
+
             <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.8)] border border-white/10 ring-1 ring-white/5">
               <img 
                 src={book.coverUrl} 
@@ -82,10 +86,6 @@ export default function BookDetail() {
             transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
             className="flex-1 text-left pt-3"
           >
-            <Link href="/" className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors mb-4 text-sm font-medium">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Library
-            </Link>
-
             {book.seriesId && series && (
               <Link href={`/series`} className="inline-block px-2.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 text-xs font-bold uppercase tracking-wider mb-3 hover:bg-primary/30 transition-colors">
                 {series.name} {book.seriesOrder ? `#${book.seriesOrder}` : ''}
