@@ -1,122 +1,119 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { 
-  useListBooks, 
-  useGetBook, 
-  useCreateBook, 
-  useUpdateBook, 
-  useDeleteBook,
-  getListBooksQueryKey,
-  getGetBookQueryKey
-} from "@workspace/api-client-react";
-import type { CreateBookInput } from "@workspace/api-client-react/src/generated/api.schemas";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import * as store from "@/lib/local-store";
+import type { CreateBookInput } from "@/lib/local-store";
+
+function useShelfBooks() {
+  const [books, setBooks] = useState(() => store.getBooks());
+  useEffect(() => {
+    const refresh = () => setBooks(store.getBooks());
+    window.addEventListener("shelf-updated", refresh);
+    return () => window.removeEventListener("shelf-updated", refresh);
+  }, []);
+  return books;
+}
 
 export function useBooks() {
-  return useListBooks();
+  const data = useShelfBooks();
+  return { data, isLoading: false, error: null };
 }
 
 export function useBook(id: number) {
-  return useGetBook(id, {
-    query: {
-      enabled: !isNaN(id) && id > 0,
-    }
-  });
+  const books = useShelfBooks();
+  const data = books.find((b) => b.id === id);
+  return { data, isLoading: false, error: null };
 }
 
 export function useCreateBookMutation() {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const mutation = useCreateBook();
 
-  const mutate = (data: CreateBookInput) => {
-    mutation.mutate(
-      { data },
-      {
-        onSuccess: (newBook) => {
-          queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
-          toast({
-            title: "Book added",
-            description: "Your book has been successfully added to your shelf.",
-          });
-          setLocation(`/book/${newBook.id}`);
-        },
-        onError: (error: any) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to add book",
-            description: error.message || "An unexpected error occurred.",
-          });
-        }
+  const mutate = useCallback(
+    (data: CreateBookInput) => {
+      setIsPending(true);
+      try {
+        const newBook = store.createBook(data);
+        toast({
+          title: "Book added",
+          description: "Your book has been successfully added to your shelf.",
+        });
+        setLocation(`/book/${newBook.id}`);
+      } catch (e: any) {
+        toast({
+          variant: "destructive",
+          title: "Failed to add book",
+          description: e.message || "An unexpected error occurred.",
+        });
+      } finally {
+        setIsPending(false);
       }
-    );
-  };
+    },
+    [toast, setLocation]
+  );
 
-  return { ...mutation, mutate };
+  return { mutate, isPending };
 }
 
 export function useUpdateBookMutation(id: number) {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const mutation = useUpdateBook();
 
-  const mutate = (data: CreateBookInput) => {
-    mutation.mutate(
-      { id, data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetBookQueryKey(id) });
-          toast({
-            title: "Book updated",
-            description: "Your book details have been saved.",
-          });
-          setLocation(`/book/${id}`);
-        },
-        onError: (error: any) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to update book",
-            description: error.message || "An unexpected error occurred.",
-          });
-        }
+  const mutate = useCallback(
+    (data: CreateBookInput) => {
+      setIsPending(true);
+      try {
+        store.updateBook(id, data);
+        toast({
+          title: "Book updated",
+          description: "Your book details have been saved.",
+        });
+        setLocation(`/book/${id}`);
+      } catch (e: any) {
+        toast({
+          variant: "destructive",
+          title: "Failed to update book",
+          description: e.message || "An unexpected error occurred.",
+        });
+      } finally {
+        setIsPending(false);
       }
-    );
-  };
+    },
+    [id, toast, setLocation]
+  );
 
-  return { ...mutation, mutate };
+  return { mutate, isPending };
 }
 
 export function useDeleteBookMutation() {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const mutation = useDeleteBook();
 
-  const mutate = (id: number) => {
-    mutation.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
-          toast({
-            title: "Book removed",
-            description: "The book has been removed from your shelf.",
-          });
-          setLocation("/");
-        },
-        onError: (error: any) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to delete book",
-            description: error.message || "An unexpected error occurred.",
-          });
-        }
+  const mutate = useCallback(
+    (id: number) => {
+      setIsPending(true);
+      try {
+        store.deleteBook(id);
+        toast({
+          title: "Book removed",
+          description: "The book has been removed from your shelf.",
+        });
+        setLocation("/");
+      } catch (e: any) {
+        toast({
+          variant: "destructive",
+          title: "Failed to delete book",
+          description: e.message || "An unexpected error occurred.",
+        });
+      } finally {
+        setIsPending(false);
       }
-    );
-  };
+    },
+    [toast, setLocation]
+  );
 
-  return { ...mutation, mutate };
+  return { mutate, isPending };
 }

@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Book } from "@/lib/local-store";
 import { Search, X } from "lucide-react";
 
 const PALETTES = [

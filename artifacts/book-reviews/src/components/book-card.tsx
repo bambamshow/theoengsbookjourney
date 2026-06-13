@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Book } from "@/lib/local-store";
 import { motion } from "framer-motion";
 
 interface BookCardProps {

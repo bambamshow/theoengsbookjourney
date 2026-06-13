@@ -1,122 +1,125 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { 
-  useListSeries, 
-  useGetSeries, 
-  useCreateSeries, 
-  useUpdateSeries, 
-  useDeleteSeries,
-  getListSeriesQueryKey,
-  getGetSeriesQueryKey,
-  getListBooksQueryKey
-} from "@workspace/api-client-react";
-import type { CreateSeriesInput } from "@workspace/api-client-react/src/generated/api.schemas";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import * as store from "@/lib/local-store";
+import type { Series, CreateSeriesInput } from "@/lib/local-store";
+
+function useShelfSeries() {
+  const [series, setSeries] = useState(() => store.getSeries());
+  useEffect(() => {
+    const refresh = () => setSeries(store.getSeries());
+    window.addEventListener("shelf-updated", refresh);
+    return () => window.removeEventListener("shelf-updated", refresh);
+  }, []);
+  return series;
+}
 
 export function useSeries() {
-  return useListSeries();
+  const data = useShelfSeries();
+  const refetch = useCallback(() => Promise.resolve({ data }), [data]);
+  return { data, isLoading: false, error: null, refetch };
 }
 
 export function useSingleSeries(id: number) {
-  return useGetSeries(id, {
-    query: {
-      enabled: !isNaN(id) && id > 0,
-    }
-  });
+  const series = useShelfSeries();
+  const data = id > 0 ? series.find((s) => s.id === id) : undefined;
+  return { data, isLoading: false, error: null };
 }
 
 export function useCreateSeriesMutation() {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const mutation = useCreateSeries();
 
-  const mutate = (data: CreateSeriesInput) => {
-    mutation.mutate(
-      { data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListSeriesQueryKey() });
-          toast({
-            title: "Series created",
-            description: "New series has been successfully created.",
-          });
+  const mutate = useCallback(
+    (
+      data: CreateSeriesInput,
+      options?: { onSuccess?: (series: Series) => void }
+    ) => {
+      setIsPending(true);
+      try {
+        const newSeries = store.createSeries(data);
+        toast({
+          title: "Series created",
+          description: "New series has been successfully created.",
+        });
+        if (options?.onSuccess) {
+          options.onSuccess(newSeries);
+        } else {
           setLocation("/");
-        },
-        onError: (error: any) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to create series",
-            description: error.message || "An unexpected error occurred.",
-          });
         }
+      } catch (e: any) {
+        toast({
+          variant: "destructive",
+          title: "Failed to create series",
+          description: e.message || "An unexpected error occurred.",
+        });
+      } finally {
+        setIsPending(false);
       }
-    );
-  };
+    },
+    [toast, setLocation]
+  );
 
-  return { ...mutation, mutate };
+  return { mutate, isPending };
 }
 
 export function useUpdateSeriesMutation(id: number) {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
-  const mutation = useUpdateSeries();
 
-  const mutate = (data: CreateSeriesInput) => {
-    mutation.mutate(
-      { id, data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListSeriesQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetSeriesQueryKey(id) });
-          toast({
-            title: "Series updated",
-            description: "Series details have been saved.",
-          });
-        },
-        onError: (error: any) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to update series",
-            description: error.message || "An unexpected error occurred.",
-          });
-        }
+  const mutate = useCallback(
+    (data: CreateSeriesInput) => {
+      setIsPending(true);
+      try {
+        store.updateSeries(id, data);
+        toast({
+          title: "Series updated",
+          description: "Series details have been saved.",
+        });
+      } catch (e: any) {
+        toast({
+          variant: "destructive",
+          title: "Failed to update series",
+          description: e.message || "An unexpected error occurred.",
+        });
+      } finally {
+        setIsPending(false);
       }
-    );
-  };
+    },
+    [id, toast]
+  );
 
-  return { ...mutation, mutate };
+  return { mutate, isPending };
 }
 
 export function useDeleteSeriesMutation() {
-  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const mutation = useDeleteSeries();
 
-  const mutate = (id: number) => {
-    mutation.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListSeriesQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() }); // Books might be affected
-          toast({
-            title: "Series deleted",
-            description: "The series has been removed.",
-          });
-          setLocation("/");
-        },
-        onError: (error: any) => {
-          toast({
-            variant: "destructive",
-            title: "Failed to delete series",
-            description: error.message || "An unexpected error occurred.",
-          });
-        }
+  const mutate = useCallback(
+    (id: number) => {
+      setIsPending(true);
+      try {
+        store.deleteSeries(id);
+        toast({
+          title: "Series deleted",
+          description: "The series has been removed.",
+        });
+        setLocation("/");
+      } catch (e: any) {
+        toast({
+          variant: "destructive",
+          title: "Failed to delete series",
+          description: e.message || "An unexpected error occurred.",
+        });
+      } finally {
+        setIsPending(false);
       }
-    );
-  };
+    },
+    [toast, setLocation]
+  );
 
-  return { ...mutation, mutate };
+  return { mutate, isPending };
 }
