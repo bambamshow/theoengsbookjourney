@@ -6,7 +6,7 @@ import { Layout } from "@/components/layout";
 import { Loader } from "@/components/ui/loader";
 import { StarRating } from "@/components/star-rating";
 import { CommentSection } from "@/components/comment-section";
-import { ArrowLeft, Edit3, Trash2, Calendar } from "lucide-react";
+import { ArrowLeft, Edit3, Trash2, Calendar, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function BookDetail() {
