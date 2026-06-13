@@ -233,41 +233,22 @@ export default function Home() {
           <>
             {/* Controls bar */}
             <div className="sticky top-14 z-30 bg-background/80 backdrop-blur-md border-b border-white/5 px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
-              {/* View mode toggle */}
-              <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
-                <button
-                  onClick={() => handleViewMode("series")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === "series"
-                      ? "bg-white/15 text-white"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  By Series
-                </button>
-                <button
-                  onClick={() => handleViewMode("all")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === "all"
-                      ? "bg-white/15 text-white"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  All Books
-                </button>
-                <button
-                  onClick={() => handleViewMode("shelf")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    viewMode === "shelf"
-                      ? "bg-primary/20 text-primary border border-primary/30"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  <Library className="w-3.5 h-3.5" />
-                  Bookshelf
-                </button>
+              {/* View mode dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-500">View:</span>
+                <div className="relative">
+                  <Library className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select
+                    value={viewMode}
+                    onChange={(e) => handleViewMode(e.target.value as ViewMode)}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-8 pr-8 py-1.5 text-xs font-medium text-white focus:outline-none focus:border-primary appearance-none cursor-pointer transition-all"
+                  >
+                    <option value="shelf" className="bg-zinc-900 text-white">Bookshelf</option>
+                    <option value="all" className="bg-zinc-900 text-white">All Books</option>
+                    <option value="series" className="bg-zinc-900 text-white">By Series</option>
+                  </select>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">▾</span>
+                </div>
               </div>
 
               {/* Sort dropdown — hidden in shelf mode (has its own search) */}
