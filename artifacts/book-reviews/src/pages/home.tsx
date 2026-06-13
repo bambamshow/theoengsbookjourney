@@ -6,7 +6,8 @@ import { SeriesRow } from "@/components/series-row";
 import { BookCard } from "@/components/book-card";
 import { Loader } from "@/components/ui/loader";
 import { useAdmin } from "@/context/admin-context";
-import { Plus, BookOpen, LayoutGrid, Layers, ArrowDownWideNarrow } from "lucide-react";
+import { Plus, BookOpen, LayoutGrid, Layers, ArrowDownWideNarrow, Library } from "lucide-react";
+import { IsometricShelf } from "@/components/isometric-shelf";
 import { Link } from "wouter";
 import type { Book } from "@workspace/api-client-react/src/generated/api.schemas";
 import {
@@ -25,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-type ViewMode = "series" | "all";
+type ViewMode = "series" | "all" | "shelf";
 type SortBy = "custom" | "title" | "author" | "rating" | "series" | "finished";
 
 const SORT_LABELS: Record<SortBy, string> = {
@@ -256,34 +257,49 @@ export default function Home() {
                   <LayoutGrid className="w-3.5 h-3.5" />
                   All Books
                 </button>
+                <button
+                  onClick={() => handleViewMode("shelf")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    viewMode === "shelf"
+                      ? "bg-primary/20 text-primary border border-primary/30"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <Library className="w-3.5 h-3.5" />
+                  Bookshelf
+                </button>
               </div>
 
-              {/* Sort dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">Sort by:</span>
-                <div className="relative">
-                  <ArrowDownWideNarrow className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSort(e.target.value as SortBy)}
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-8 pr-8 py-1.5 text-xs font-medium text-white focus:outline-none focus:border-primary appearance-none cursor-pointer transition-all"
-                  >
-                    {(Object.keys(SORT_LABELS) as SortBy[]).map((value) => (
-                      <option key={value} value={value} className="bg-zinc-900 text-white">
-                        {SORT_LABELS[value]}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">▾</span>
+              {/* Sort dropdown — hidden in shelf mode (has its own search) */}
+              {viewMode !== "shelf" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500">Sort by:</span>
+                  <div className="relative">
+                    <ArrowDownWideNarrow className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => handleSort(e.target.value as SortBy)}
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-md pl-8 pr-8 py-1.5 text-xs font-medium text-white focus:outline-none focus:border-primary appearance-none cursor-pointer transition-all"
+                    >
+                      {(Object.keys(SORT_LABELS) as SortBy[]).map((value) => (
+                        <option key={value} value={value} className="bg-zinc-900 text-white">
+                          {SORT_LABELS[value]}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">▾</span>
+                  </div>
+                  {isDnDActive && (
+                    <span className="text-xs text-zinc-600 hidden sm:inline">Drag to reorder</span>
+                  )}
                 </div>
-                {isDnDActive && (
-                  <span className="text-xs text-zinc-600 hidden sm:inline">Drag to reorder</span>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Content */}
-            {viewMode === "series" ? (
+            {viewMode === "shelf" ? (
+              <IsometricShelf books={sortedAllBooks} />
+            ) : viewMode === "series" ? (
               <div className="flex flex-col gap-8 mt-6">
                 {seriesList?.map((series) => {
                   const seriesBooks = booksBySeries.get(series.id);
