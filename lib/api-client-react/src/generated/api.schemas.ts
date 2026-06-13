@@ -24,6 +24,7 @@ export interface Book {
   seriesOrder?: number | null;
   pages?: number | null;
   finishedAt?: string | null;
+  notionId?: string | null;
   createdAt: string;
 }
 
@@ -41,6 +42,7 @@ export interface CreateBookInput {
   seriesOrder?: number | null;
   pages?: number | null;
   finishedAt?: string | null;
+  notionId?: string | null;
 }
 
 export interface Series {

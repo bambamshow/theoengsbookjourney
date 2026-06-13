@@ -38,11 +38,11 @@ router.post("/series", requireAdmin, async (req, res) => {
 
 router.get("/series/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const [series] = await db.select().from(seriesTable).where(eq(seriesTable.id, id));
     if (!series) return res.status(404).json({ error: "Series not found" });
     const books = await db.select().from(booksTable).where(eq(booksTable.seriesId, id));
-    res.json({
+    return res.json({
       ...series,
       description: series.description ?? null,
       books: books.map(b => ({
@@ -55,32 +55,32 @@ router.get("/series/:id", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.put("/series/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const body = UpdateSeriesBody.parse(req.body);
     const [series] = await db.update(seriesTable).set({
       name: body.name,
       description: body.description ?? null,
     }).where(eq(seriesTable.id, id)).returning();
     if (!series) return res.status(404).json({ error: "Series not found" });
-    res.json({
+    return res.json({
       ...series,
       description: series.description ?? null,
     });
   } catch (err) {
     console.error(err);
-    res.status(400).json({ error: String(err) });
+    return res.status(400).json({ error: String(err) });
   }
 });
 
 router.delete("/series/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     await db.delete(seriesTable).where(eq(seriesTable.id, id));
     res.status(204).send();
   } catch (err) {

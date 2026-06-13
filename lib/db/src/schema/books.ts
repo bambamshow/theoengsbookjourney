@@ -14,6 +14,7 @@ export const booksTable = pgTable("books", {
   seriesOrder: integer("series_order"),
   pages: integer("pages"),
   finishedAt: timestamp("finished_at"),
+  notionId: text("notion_id").unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

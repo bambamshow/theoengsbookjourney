@@ -320,7 +320,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         title:
           type: string
         author:
@@ -347,6 +347,9 @@ components:
         finishedAt:
           type: string
           format: date-time
+          nullable: true
+        notionId:
+          type: string
           nullable: true
         createdAt:
           type: string
@@ -387,6 +390,9 @@ components:
         finishedAt:
           type: string
           format: date-time
+          nullable: true
+        notionId:
+          type: string
           nullable: true
       required:
         - title

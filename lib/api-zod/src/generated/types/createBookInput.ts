@@ -20,4 +20,5 @@ export interface CreateBookInput {
   seriesOrder?: number | null;
   pages?: number | null;
   finishedAt?: Date | null;
+  notionId?: string | null;
 }

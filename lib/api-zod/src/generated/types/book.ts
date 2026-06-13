@@ -21,5 +21,6 @@ export interface Book {
   seriesOrder?: number | null;
   pages?: number | null;
   finishedAt?: Date | null;
+  notionId?: string | null;
   createdAt: Date;
 }
