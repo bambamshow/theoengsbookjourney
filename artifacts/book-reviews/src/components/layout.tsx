@@ -68,7 +68,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <span className="hidden sm:inline">Admin</span>
                 </div>
                 <button
-                  onClick={logout}
+                  onClick={() => {
+                    logout();
+                    navigate("/");
+                    reopenEntry();
+                  }}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full text-zinc-400 hover:text-white border border-white/5 hover:border-white/15 transition-all text-sm"
                   title="Log out"
                 >
