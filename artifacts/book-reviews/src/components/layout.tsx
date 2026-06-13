@@ -61,16 +61,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Link 
-                href="/book/new"
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all hover:scale-105 active:scale-95 text-sm font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add Book</span>
-              </Link>
-            )}
-
             {isAdmin ? (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
